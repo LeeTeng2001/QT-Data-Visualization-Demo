@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="tabBarAutoHide">
        <bool>false</bool>
@@ -92,7 +92,10 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSpinBox" name="spinBoxUIDSingle"/>
+                    <widget class="QSpinBox" name="spinBoxUIDSetLow"/>
+                   </item>
+                   <item>
+                    <widget class="QSpinBox" name="spinBoxUIDSetHigh"/>
                    </item>
                   </layout>
                  </item>
@@ -128,7 +131,10 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSpinBox" name="spinBoxPOISingle"/>
+                    <widget class="QSpinBox" name="spinBoxPOISetLow"/>
+                   </item>
+                   <item>
+                    <widget class="QSpinBox" name="spinBoxPOISetHigh"/>
                    </item>
                   </layout>
                  </item>
@@ -281,7 +287,10 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSpinBox" name="spinCompareUID1"/>
+                    <widget class="QSpinBox" name="spinCompareUID11"/>
+                   </item>
+                   <item>
+                    <widget class="QSpinBox" name="spinCompareUID12"/>
                    </item>
                   </layout>
                  </item>
@@ -295,7 +304,10 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSpinBox" name="spinCompareUID2"/>
+                    <widget class="QSpinBox" name="spinCompareUID21"/>
+                   </item>
+                   <item>
+                    <widget class="QSpinBox" name="spinCompareUID22"/>
                    </item>
                   </layout>
                  </item>
@@ -325,7 +337,10 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSpinBox" name="spinComparePOI1"/>
+                    <widget class="QSpinBox" name="spinComparePOI11"/>
+                   </item>
+                   <item>
+                    <widget class="QSpinBox" name="spinComparePOI12"/>
                    </item>
                   </layout>
                  </item>
@@ -339,7 +354,10 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSpinBox" name="spinComparePOI2"/>
+                    <widget class="QSpinBox" name="spinComparePOI21"/>
+                   </item>
+                   <item>
+                    <widget class="QSpinBox" name="spinComparePOI22"/>
                    </item>
                   </layout>
                  </item>
@@ -538,9 +556,9 @@
                <widget class="QSpinBox" name="spinPredictPOI2"/>
               </item>
               <item>
-               <widget class="QPushButton" name="btnGenerateNewton">
+               <widget class="QPushButton" name="btnGenerateCubic">
                 <property name="text">
-                 <string>Generate Newton Cache</string>
+                 <string>Generate Interpolation Cache</string>
                 </property>
                </widget>
               </item>

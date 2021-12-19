@@ -160,24 +160,25 @@ vector<pair<double, double>> Database::getAllPOI() {
 }
 
 // get top 10 between date, can query user top 10 or poi top 10
-vector<pair<int, int>> Database::getTop10(int id, bool isUser, const QDateTime& startDate, const QDateTime& endDate) {
+vector<pair<int, int>> Database::getTop10(pair<int, int> idRange, bool isUser, const QDateTime& startDate, const QDateTime& endDate) {
     vector<pair<int, int>> result;
     QSqlQuery qry(db);
     if (isUser) {
         qry.prepare("SELECT poi, COUNT(*) as `num` FROM user_entry\n"
-                    "WHERE UID == ? AND date BETWEEN ? AND ?\n"
+                    "WHERE UID BETWEEN ? AND ? AND date BETWEEN ? AND ?\n"
                     "GROUP BY poi\n"
                     "ORDER BY num DESC\n"
                     "LIMIT 10;");
     }
     else {
         qry.prepare("SELECT UID, COUNT(*) as `num` FROM user_entry\n"
-                    "WHERE poi == ? AND date BETWEEN ? AND ?\n"
+                    "WHERE poi BETWEEN ? AND ? AND date BETWEEN ? AND ?\n"
                     "GROUP BY UID\n"
                     "ORDER BY num DESC\n"
                     "LIMIT 10;");
     }
-    qry.addBindValue(id);
+    qry.addBindValue(idRange.first);
+    qry.addBindValue(idRange.second);
     qry.addBindValue(startDate);
     qry.addBindValue(endDate);
 
@@ -216,25 +217,26 @@ vector<pair<QDateTime, int>> Database::getUsersOverTimeInArea(const pair<int, in
 }
 
 // Get monthly data from a poi id or user id in a time frame
-vector<pair<QDateTime, int>> Database::getMonthlyFromID(int id, const pair<QDateTime, QDateTime> &timeRange, bool isUser) {
+vector<pair<QDateTime, int>> Database::getMonthlyFromID(int id1, int id2, const pair<QDateTime, QDateTime> &timeRange, bool isUser) {
     vector<pair<QDateTime, int>> result;
     QSqlQuery qry(db);
 
     if (isUser) {
         qry.prepare("SELECT strftime('%Y-%m', date) as `year-month`, COUNT(*) as `num` FROM user_entry\n"
                     "INNER JOIN poi ON poi.PID==user_entry.poi\n"
-                    "WHERE UID == ? AND\n"
+                    "WHERE UID BETWEEN ? AND ? AND\n"
                     "      date BETWEEN ? AND ?\n"
                     "GROUP BY \"year-month\";");
     }
     else {
         qry.prepare("SELECT strftime('%Y-%m', date) as `year-month`, COUNT(*) as `num` FROM user_entry\n"
                     "INNER JOIN poi ON poi.PID==user_entry.poi\n"
-                    "WHERE poi == ? AND\n"
+                    "WHERE poi BETWEEN ? AND ? AND\n"
                     "      date BETWEEN ? AND ?\n"
                     "GROUP BY \"year-month\";");
     }
-    qry.addBindValue(id);
+    qry.addBindValue(id1);
+    qry.addBindValue(id2);
     qry.addBindValue(timeRange.first);
     qry.addBindValue(timeRange.second);
 
@@ -266,7 +268,7 @@ vector<pair<QString, pair<int, int>>> Database::getUserDataSimplified(int id) {
 
 // get daily total user over time of a poi ID and return result in a newton input form, that is ((2010-01-01 - queryDate).toDays, count)
 // You can feed the result directly into newton algorithm
-vector<pair<int, int>> Database::getNewtonInput(int poiID1, int poiID2) {
+vector<pair<int, int>> Database::getInterpolateInput(int poiID1, int poiID2) {
     vector<pair<int, int>> result;
     QSqlQuery qry(db);
 
@@ -279,7 +281,7 @@ vector<pair<int, int>> Database::getNewtonInput(int poiID1, int poiID2) {
     qry.addBindValue(poiID2);
 
     auto originDate = QDateTime::fromString("2010-01-01", "yyyy-MM-dd");
-    if (!qry.exec()) qDebug() << "Error getting newton input from table";
+    if (!qry.exec()) qDebug() << "Error getting interpolate input from table";
     while (qry.next()) {
         result.emplace_back(originDate.daysTo(QDateTime::fromString(qry.value(0).toString(), "yyyy-MM-dd")),
                             qry.value(1).toInt());

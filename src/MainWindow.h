@@ -2,7 +2,7 @@
 
 #include "UsefulInclude.h"
 #include "MainCalculation.h"
-#include "Newton.h"
+#include "spline.h"
 #include "Database.h"
 #include <QMainWindow>
 #include <QtCharts>
@@ -46,18 +46,18 @@ public slots:
     void updateTrajectoryGraph(int percentageOf100);
 
     // Generate newton cache
-    void btnGenerateNewton();
+    void btnGenerateCubic();
     // Save the result from other thread and it's now ready to accept prediction
-    void cacheNewtonResult(shared_ptr<Newton>);
+    void cacheCubicResult(pair<int, int> idBound, shared_ptr<vector<pair<int, int>>> coords);
     // Response to user input prediction
     void showPrediction();
 
 signals:
     // Signals to other thread to do the calculation
-    void calculateTop10(int id, bool isUser, const QDateTime&, const QDateTime&);
+    void calculateTop10(pair<int, int> id, bool isUser, const QDateTime&, const QDateTime&);
     void calculateTotalUserOverTimeSetPoints(const pair<int, int> &latitudeBound, const pair<int, int> &longitudeBound, const pair<QDateTime, QDateTime> &timeRange);
-    void calculateCompareTwo(int id1, int id2, const pair<QDateTime, QDateTime> &timeRange, bool isUser);
-    void calculateNewtonCache(int POIId1, int POIId2);
+    void calculateCompareTwo(pair<int, int> id1Range, pair<int, int> id2Range, const pair<QDateTime, QDateTime> &timeRange, bool isUser);
+    void calculateCubicCache(int POIId1, int POIId2);
 
 public:
     MainCalculation *worker;
@@ -74,8 +74,10 @@ private:
     QScatterSeries* scatterPoint = nullptr;
     map<pair<int, int>, int> seriesIdx;
 
-    // Newton cache
-    shared_ptr<Newton> newton;
+    // interpolation cache
+    pair<int, int> cachePOIBound;
+    shared_ptr<vector<pair<int, int>>> cubicCoords;
+    shared_ptr<tk::spline> cubic;
 
     // Bound selection
     pair<int, int> latitudeBound{-90, 90};

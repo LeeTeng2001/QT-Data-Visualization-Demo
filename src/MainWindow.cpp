@@ -1,6 +1,6 @@
 #include "MainWindow.h"
-#include "ui_MainWindow.h"
 #include "MainCalculation.h"
+#include "ui_MainWindow.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
@@ -17,8 +17,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(worker, &MainCalculation::finishedTotalUserOverTimeSetPoints, this, &MainWindow::showTotalUserOverTimeSetPoints);
     connect(this, &MainWindow::calculateCompareTwo, worker, &MainCalculation::calculateCompareTwo);
     connect(worker, &MainCalculation::finishedCompareTwo, this, &MainWindow::showCompareTwo);
-    connect(this, &MainWindow::calculateNewtonCache, worker, &MainCalculation::calculateNewtonCache);
-    connect(worker, &MainCalculation::finishedNewtonCache, this, &MainWindow::cacheNewtonResult);
+    connect(this, &MainWindow::calculateCubicCache, worker, &MainCalculation::calculateCubicCache);
+    connect(worker, &MainCalculation::finishedCubicCache, this, &MainWindow::cacheCubicResult);
     thread.start();
 
     // Other local connection
@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         adjustPOISelection();
     });
     connect(ui->traSlider, &QAbstractSlider::valueChanged, this, &MainWindow::updateTrajectoryGraph);
-    connect(ui->btnGenerateNewton, &QPushButton::clicked, this, &MainWindow::btnGenerateNewton);
+    connect(ui->btnGenerateCubic, &QPushButton::clicked, this, &MainWindow::btnGenerateCubic);
     connect(ui->btnShowPrediction, &QPushButton::clicked, this, &MainWindow::showPrediction);
 }
 
@@ -53,13 +53,19 @@ void MainWindow::startMainWindow(const QString &dbname, shared_ptr<InspectData> 
     auto dateRange = db->getDateRange();
 
     // UID and PID must start with 0, Set bound -----------------------
-    ui->spinBoxUIDSingle->setRange(0, maxUID);
-    ui->spinCompareUID1->setRange(0, maxUID);
-    ui->spinCompareUID2->setRange(0, maxUID);
+    ui->spinBoxUIDSetLow->setRange(0, maxUID);
+    ui->spinBoxUIDSetHigh->setRange(0, maxUID);
+    ui->spinCompareUID11->setRange(0, maxUID);
+    ui->spinCompareUID12->setRange(0, maxUID);
+    ui->spinCompareUID21->setRange(0, maxUID);
+    ui->spinCompareUID22->setRange(0, maxUID);
     ui->spinTrajectoryUID->setRange(0, maxUID);
-    ui->spinBoxPOISingle->setRange(0, maxPID);
-    ui->spinComparePOI1->setRange(0, maxPID);
-    ui->spinComparePOI2->setRange(0, maxPID);
+    ui->spinBoxPOISetLow->setRange(0, maxPID);
+    ui->spinBoxPOISetHigh->setRange(0, maxPID);
+    ui->spinComparePOI11->setRange(0, maxPID);
+    ui->spinComparePOI12->setRange(0, maxPID);
+    ui->spinComparePOI21->setRange(0, maxPID);
+    ui->spinComparePOI22->setRange(0, maxPID);
     ui->spinPredictPOI1->setRange(0, maxPID);
     ui->spinPredictPOI2->setRange(0, maxPID);
     adjustPOISelection();
@@ -125,9 +131,9 @@ void MainWindow::btnCalculateTop10(bool calculateUser) {
     ui->statusbar->showMessage("Calculating...");
 
     if (calculateUser)
-        emit calculateTop10(ui->spinBoxUIDSingle->value(), true, ui->dateTimeEditStart->dateTime(), ui->dateTimeEditEnd->dateTime());
+        emit calculateTop10({ui->spinBoxUIDSetLow->value(), ui->spinBoxUIDSetHigh->value()}, true, ui->dateTimeEditStart->dateTime(), ui->dateTimeEditEnd->dateTime());
     else
-        emit calculateTop10(ui->spinBoxPOISingle->value(), false, ui->dateTimeEditStart->dateTime(), ui->dateTimeEditEnd->dateTime());
+        emit calculateTop10({ui->spinBoxPOISetLow->value(), ui->spinBoxPOISetHigh->value()}, false, ui->dateTimeEditStart->dateTime(), ui->dateTimeEditEnd->dateTime());
 }
 
 void MainWindow::showTop10(shared_ptr<vector<pair<int, int>>> res, bool calculateUser) {
@@ -143,8 +149,8 @@ void MainWindow::showTop10(shared_ptr<vector<pair<int, int>>> res, bool calculat
     auto axisY = new QValueAxis;
 
     // Set up
-    if (calculateUser) chart->setTitle("Top 10 POI of user with ID " + QString::number(ui->spinBoxUIDSingle->value()));
-    else chart->setTitle("Top 10 user of POI with ID " + QString::number(ui->spinBoxPOISingle->value()));
+    if (calculateUser) chart->setTitle("Top 10 POI of user with ID " + QString::number(ui->spinBoxUIDSetLow->value()) + " to " + QString::number(ui->spinBoxUIDSetHigh->value()));
+    else chart->setTitle("Top 10 user of POI with ID " + QString::number(ui->spinBoxPOISetLow->value()) + " to " + QString::number(ui->spinBoxPOISetHigh->value()));
     chart->addSeries(series);
     chart->legend()->setVisible(false);
     series->append(set);
@@ -255,7 +261,7 @@ void MainWindow::showTotalUserOverTimeSetPoints(shared_ptr<vector<pair<QDateTime
 
     chart->addSeries(series);
     chart->legend()->hide();
-    chart->setTitle("Total users over POI bound over time");
+    chart->setTitle("Total users in POI bound over time");
 
     auto axisX = new QDateTimeAxis;
     axisX->setTickCount(res->size());
@@ -283,10 +289,10 @@ void MainWindow::btnCompareTwo(bool isUser) {
     ui->statusbar->showMessage("Calculating...");
 
     if (isUser)
-        emit calculateCompareTwo(ui->spinCompareUID1->value(), ui->spinCompareUID2->value(),
+        emit calculateCompareTwo({ui->spinCompareUID11->value(), ui->spinCompareUID12->value()}, {ui->spinCompareUID21->value(), ui->spinCompareUID22->value()},
                                  {ui->dateTimeEditStart->dateTime(), ui->dateTimeEditEnd->dateTime()}, true);
     else
-        emit calculateCompareTwo(ui->spinComparePOI1->value(), ui->spinComparePOI2->value(),
+        emit calculateCompareTwo({ui->spinComparePOI11->value(), ui->spinComparePOI12->value()}, {ui->spinComparePOI21->value(), ui->spinComparePOI22->value()},
                                  {ui->dateTimeEditStart->dateTime(), ui->dateTimeEditEnd->dateTime()}, false);
 }
 
@@ -314,14 +320,14 @@ void MainWindow::showCompareTwo(shared_ptr<vector<pair<QDateTime, int>>> res1, s
 
     // Set up
     if (isUser) {
-        chart->setTitle("Total visited POI overtime for 2 users");
-        series1->setName("User ID: " + QString::number(ui->spinCompareUID1->value()));
-        series2->setName("User ID: " + QString::number(ui->spinCompareUID2->value()));
+        chart->setTitle("Total visited POI overtime for 2 users range");
+        series1->setName("User ID: " + QString::number(ui->spinCompareUID11->value()) + " to " + QString::number(ui->spinCompareUID12->value()));
+        series2->setName("User ID: " + QString::number(ui->spinCompareUID21->value()) + " to " + QString::number(ui->spinCompareUID22->value()));
     }
     else {
-        chart->setTitle("Total users overtime for 2 POI");
-        series1->setName("POI ID: " + QString::number(ui->spinComparePOI1->value()));
-        series2->setName("POI ID: " + QString::number(ui->spinComparePOI2->value()));
+        chart->setTitle("Total users overtime for 2 POI range");
+        series1->setName("POI ID: " + QString::number(ui->spinComparePOI11->value()) + " to " + QString::number(ui->spinComparePOI12->value()));
+        series2->setName("POI ID: " + QString::number(ui->spinComparePOI21->value()) + " to " + QString::number(ui->spinComparePOI22->value()));
     }
     chart->legend()->setVisible(true);
     chart->addSeries(series1);
@@ -426,9 +432,9 @@ void MainWindow::updateTrajectoryGraph(int percentageOf100) {
     ui->traTimeStamp->setText(userData[idxOfData].first);
 }
 
-void MainWindow::btnGenerateNewton() {
-    pair<int, int> curIDBound{ ui->spinPredictPOI1->value(),  ui->spinPredictPOI2->value()};
-    if (newton != nullptr && newton->getId() == curIDBound) {
+void MainWindow::btnGenerateCubic() {
+    pair<int, int> curPOIBound{ ui->spinPredictPOI1->value(),  ui->spinPredictPOI2->value()};
+    if (cubicCoords != nullptr && cachePOIBound == curPOIBound) {
         ui->statusbar->showMessage("Newton cache is already generated");
         return;
     }
@@ -440,33 +446,37 @@ void MainWindow::btnGenerateNewton() {
     isProcessing = true;
     ui->statusbar->showMessage("Calculating...");
 
-    emit calculateNewtonCache(ui->spinPredictPOI1->value(), ui->spinPredictPOI2->value());
+    emit calculateCubicCache(ui->spinPredictPOI1->value(), ui->spinPredictPOI2->value());
 }
 
-void MainWindow::cacheNewtonResult(shared_ptr<Newton> data) {
+void MainWindow::cacheCubicResult(pair<int, int> idBound, shared_ptr<vector<pair<int, int>>> coords) {
     isProcessing = false;
     ui->statusbar->showMessage("Task finished.");
-    newton = std::move(data);
-
-    auto newtonID = newton->getId();
-    ui->labelNewtonCache->setText("Left: " + QString::number(newtonID.first) + ", Right: " + QString::number(newtonID.second));
+    vector<double> X, Y;
+    for (const auto &item : (*coords)) {
+        X.emplace_back(item.first);
+        Y.emplace_back(item.second);
+    }
+    cubic = std::make_shared<tk::spline>(X, Y);
+    cubicCoords = std::move(coords);
+    cachePOIBound = idBound;
+    ui->labelNewtonCache->setText("Left: " + QString::number(idBound.first) + ", Right: " + QString::number(idBound.second));
 }
 
 void MainWindow::showPrediction() {
-    if (newton == nullptr) {
-        ui->statusbar->showMessage("Please generate newton cache first");
+    if (cubic == nullptr) {
+        ui->statusbar->showMessage("Please generate cubic cache first");
         return;
     }
 
     // Get result
     auto originDate = QDateTime::fromString("2010-01-01", "yyyy-MM-dd");
     auto predictX = originDate.daysTo(ui->predictDate->dateTime());
-    auto result = newton->interpolate(predictX);
-    if (result == NAN) result = 0;
+    auto result = (*cubic)(predictX);
 
     // Update graph
-    auto series = new QSplineSeries();
-    auto targetDot = new QScatterSeries();
+    auto series = new QLineSeries;
+    auto targetDot = new QScatterSeries;
     series->setName("Original Data");
     targetDot->setName("Prediction");
     targetDot->setColor(QColor::fromRgb(200, 0, 0));
@@ -474,11 +484,11 @@ void MainWindow::showPrediction() {
 
     pair<int, int> horizontalRange{predictX, predictX};
     int verticalMax = result;
-    int totalSize = newton->getCoord().size();
+    int totalSize = (*cubicCoords).size();
     for (int i = 0; i < totalSize; i++) {
-        horizontalRange = {std::min(horizontalRange.first, newton->getCoord()[i].first), std::max(horizontalRange.second, newton->getCoord()[i].first)};
-        verticalMax = std::max(verticalMax, newton->getCoord()[i].second);
-        series->append(newton->getCoord()[i].first, newton->getCoord()[i].second);
+        horizontalRange = {std::min(horizontalRange.first, (*cubicCoords)[i].first), std::max(horizontalRange.second, (*cubicCoords)[i].first)};
+        verticalMax = std::max(verticalMax, (*cubicCoords)[i].second);
+        series->append((*cubicCoords)[i].first, (*cubicCoords)[i].second);
     }
     verticalMax += 1;
     // horizontalRange = {horizontalRange.first - 1, horizontalRange.second + 1};
