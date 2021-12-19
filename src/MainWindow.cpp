@@ -149,8 +149,8 @@ void MainWindow::showTop10(shared_ptr<vector<pair<int, int>>> res, bool calculat
     auto axisY = new QValueAxis;
 
     // Set up
-    if (calculateUser) chart->setTitle("Top 10 POI of user with ID " + QString::number(ui->spinBoxUIDSetLow->value()) + " to " + QString::number(ui->spinBoxUIDSetHigh->value()));
-    else chart->setTitle("Top 10 user of POI with ID " + QString::number(ui->spinBoxPOISetLow->value()) + " to " + QString::number(ui->spinBoxPOISetHigh->value()));
+    if (calculateUser) chart->setTitle("Top 10 POI of users in time frame with ID " + QString::number(ui->spinBoxUIDSetLow->value()) + " to " + QString::number(ui->spinBoxUIDSetHigh->value()));
+    else chart->setTitle("Top 10 user of POIs in time frame with ID " + QString::number(ui->spinBoxPOISetLow->value()) + " to " + QString::number(ui->spinBoxPOISetHigh->value()));
     chart->addSeries(series);
     chart->legend()->setVisible(false);
     series->append(set);
@@ -193,8 +193,8 @@ void MainWindow::adjustPOISelection() {
     std::set<pair<double, double>> lookupLoc;
     for (auto &row : allPOI) {
         pair<double, double> newPos = {
-                (double)((int)(row.first * 1)) / 1,
-                (double)((int)(row.second * 1)) / 1
+                (double)(int)(row.first),
+                (double)(int)(row.second)
         };
         if (lookupLoc.find(newPos) != lookupLoc.end()) continue;
 
@@ -393,6 +393,7 @@ void MainWindow::showTrajectoryGraph(int id) {
     chart->addSeries(series);
     chart->addSeries(scatterPoint);
     chart->setTitle("Trajectory of user " + QString::number(id) + " in latitude and longitude");
+    chart->legend()->hide();
     chart->setDropShadowEnabled(false);
 
     auto axisX = new QValueAxis;
@@ -435,7 +436,7 @@ void MainWindow::updateTrajectoryGraph(int percentageOf100) {
 void MainWindow::btnGenerateCubic() {
     pair<int, int> curPOIBound{ ui->spinPredictPOI1->value(),  ui->spinPredictPOI2->value()};
     if (cubicCoords != nullptr && cachePOIBound == curPOIBound) {
-        ui->statusbar->showMessage("Newton cache is already generated");
+        ui->statusbar->showMessage("Cubic cache is already generated");
         return;
     }
     if (isProcessing)  {
@@ -452,6 +453,8 @@ void MainWindow::btnGenerateCubic() {
 void MainWindow::cacheCubicResult(pair<int, int> idBound, shared_ptr<vector<pair<int, int>>> coords) {
     isProcessing = false;
     ui->statusbar->showMessage("Task finished.");
+    // Must do cubic calculation here because QT doesn't allow custom namespace shared pointer ...
+    // Fortunately it's pretty lightweight
     vector<double> X, Y;
     for (const auto &item : (*coords)) {
         X.emplace_back(item.first);
@@ -501,7 +504,7 @@ void MainWindow::showPrediction() {
     auto chart = new QChart;
     chart->addSeries(series);
     chart->addSeries(targetDot);
-    chart->setTitle("Total users overtime of a POI");
+    chart->setTitle("Total users overtime for a set of POI");
     chart->setDropShadowEnabled(false);
 
     auto axisX = new QValueAxis;

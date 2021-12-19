@@ -10,7 +10,7 @@ Database::Database(QString dbname) : dbName(std::move(dbname)) {
     if (!db.open()) qDebug() << "Can't Connect to database: " + db.databaseName();
     else qDebug() << "Connected to: " + db.databaseName();
 
-    // Create table for new database
+    // Create table if it's a new database
     QSqlQuery qry(db);
     qry.prepare("CREATE TABLE IF NOT EXISTS poi\n"
                 "(\n"
@@ -28,7 +28,7 @@ Database::Database(QString dbname) : dbName(std::move(dbname)) {
                  ");");
     if (!qry.exec()) qDebug() << "Error creating user table";
 
-    // Get total entries in the table
+    // Print total entries in the table
     qry.prepare("SELECT COUNT(*) FROM user_entry;");
     if (!qry.exec()) qDebug() << "Error querying total data from table";
     while (qry.next()) {
@@ -42,13 +42,13 @@ Database::~Database() {
     db.close();
 }
 
-// database name without suffix, like 'gowalla'
+// path to database name without suffix, like '~/gowalla'
 QString Database::getDbName() const {
     return dbName;
 }
 
 // return total rows != 0
-bool Database::hasData() {
+bool Database::hasData() const {
     QSqlQuery qry(db);
     qry.prepare("SELECT COUNT(*) FROM user_entry;");
     if (!qry.exec()) qDebug() << "Error querying total data from table";
@@ -60,7 +60,7 @@ bool Database::hasData() {
 }
 
 // Regenerate all tables from the db
-void Database::resetTable() {
+void Database::resetTable() const {
     QSqlQuery qry(db);
     qry.prepare("DROP TABLE IF EXISTS poi;");
     if (!qry.exec()) qDebug() << "Error dropping poi table";
@@ -84,7 +84,7 @@ void Database::resetTable() {
 }
 
 // Insert single row from a list of csv row
-void Database::insertRow(const QList<QString> &lst) {
+void Database::insertRow(const QList<QString> &lst) const {
     QSqlQuery qry(db);
     qry.prepare("INSERT OR REPLACE INTO poi (PID, latitude, longitude) VALUES (?, ?, ?);");
     qry.addBindValue(lst[1].toInt());
@@ -99,7 +99,7 @@ void Database::insertRow(const QList<QString> &lst) {
 }
 
 // Start db transaction
-void Database::startTransaction() {
+void Database::startTransaction() const {
     QSqlQuery qry(db);
     if (qry.exec("BEGIN TRANSACTION;"))
         qDebug() << "Start transaction";
@@ -107,7 +107,7 @@ void Database::startTransaction() {
 }
 
 // Stop db transaction and commit
-void Database::stopTransaction() {
+void Database::stopTransaction() const {
     QSqlQuery qry(db);
     if (qry.exec("COMMIT;"))
         qDebug() << "End and commit transaction";
@@ -115,7 +115,7 @@ void Database::stopTransaction() {
 }
 
 // get max ID from user or POI id
-int Database::getMaxID(bool isUser) {
+int Database::getMaxID(bool isUser) const {
     QSqlQuery qry(db);
     if (isUser) qry.prepare("SELECT max(user_entry.UID) FROM user_entry;");
     else qry.prepare("SELECT max(poi.PID) FROM poi;");
@@ -129,7 +129,7 @@ int Database::getMaxID(bool isUser) {
 }
 
 // Get date limit range for user to select
-pair<QDate, QDate> Database::getDateRange() {
+pair<QDate, QDate> Database::getDateRange() const {
     pair<QDate, QDate> result;
     QSqlQuery qry(db);
 
@@ -145,8 +145,8 @@ pair<QDate, QDate> Database::getDateRange() {
     return result;
 }
 
-// Get all poi in a vector of (latitude, longitude), since it's 0 indexed we don't need to query index
-vector<pair<double, double>> Database::getAllPOI() {
+// Get all poi in a vector of (latitude, longitude), since it's 0 indexed and non-decreasing we don't need to query index
+vector<pair<double, double>> Database::getAllPOI() const {
     vector<pair<double, double>> result;
     QSqlQuery qry(db);
 
@@ -159,8 +159,9 @@ vector<pair<double, double>> Database::getAllPOI() {
     return result;
 }
 
-// get top 10 between date, can query user top 10 or poi top 10
-vector<pair<int, int>> Database::getTop10(pair<int, int> idRange, bool isUser, const QDateTime& startDate, const QDateTime& endDate) {
+// get top 10 between date, can query user range top 10 or poi range top 10
+vector<pair<int, int>> Database::getTop10(const pair<int, int> &idRange, bool isUser, const QDateTime &startDate,
+                                          const QDateTime &endDate) const {
     vector<pair<int, int>> result;
     QSqlQuery qry(db);
     if (isUser) {
@@ -169,8 +170,7 @@ vector<pair<int, int>> Database::getTop10(pair<int, int> idRange, bool isUser, c
                     "GROUP BY poi\n"
                     "ORDER BY num DESC\n"
                     "LIMIT 10;");
-    }
-    else {
+    } else {
         qry.prepare("SELECT UID, COUNT(*) as `num` FROM user_entry\n"
                     "WHERE poi BETWEEN ? AND ? AND date BETWEEN ? AND ?\n"
                     "GROUP BY UID\n"
@@ -191,7 +191,9 @@ vector<pair<int, int>> Database::getTop10(pair<int, int> idRange, bool isUser, c
 }
 
 // get total user in a GPS area and time frame
-vector<pair<QDateTime, int>> Database::getUsersOverTimeInArea(const pair<int, int> &latitudeBound, const pair<int, int> &longitudeBound, const pair<QDateTime, QDateTime> &timeRange) {
+vector<pair<QDateTime, int>>
+Database::getUsersOverTimeInArea(const pair<int, int> &latitudeBound, const pair<int, int> &longitudeBound,
+                                 const pair<QDateTime, QDateTime> &timeRange) const {
     vector<pair<QDateTime, int>> result;
     QSqlQuery qry(db);
 
@@ -216,8 +218,9 @@ vector<pair<QDateTime, int>> Database::getUsersOverTimeInArea(const pair<int, in
     return result;
 }
 
-// Get monthly data from a poi id or user id in a time frame
-vector<pair<QDateTime, int>> Database::getMonthlyFromID(int id1, int id2, const pair<QDateTime, QDateTime> &timeRange, bool isUser) {
+// Get monthly data from a poi id or user id (range) in a time frame
+vector<pair<QDateTime, int>>
+Database::getMonthlyFromID(int id1, int id2, const pair<QDateTime, QDateTime> &timeRange, bool isUser) const {
     vector<pair<QDateTime, int>> result;
     QSqlQuery qry(db);
 
@@ -248,8 +251,8 @@ vector<pair<QDateTime, int>> Database::getMonthlyFromID(int id1, int id2, const 
     return result;
 }
 
-// get user data from id in a form of (DateString, (latitude(int), longitude(int)))
-vector<pair<QString, pair<int, int>>> Database::getUserDataSimplified(int id) {
+// get simplified user data from id in a form of (DateString, (latitude(int), longitude(int)))
+vector<pair<QString, pair<int, int>>> Database::getUserDataSimplified(int id) const {
     vector<pair<QString, pair<int, int>>> result;
     QSqlQuery qry(db);
 
@@ -266,9 +269,9 @@ vector<pair<QString, pair<int, int>>> Database::getUserDataSimplified(int id) {
     return result;
 }
 
-// get daily total user over time of a poi ID and return result in a newton input form, that is ((2010-01-01 - queryDate).toDays, count)
-// You can feed the result directly into newton algorithm
-vector<pair<int, int>> Database::getInterpolateInput(int poiID1, int poiID2) {
+// get daily total user over time of a poi ID and return result in a interpolation input form, that is ((2010-01-01 - queryDate).toDays, count)
+// You can feed the result directly to interpolation algorithm
+vector<pair<int, int>> Database::getInterpolateInput(int poiID1, int poiID2) const {
     vector<pair<int, int>> result;
     QSqlQuery qry(db);
 

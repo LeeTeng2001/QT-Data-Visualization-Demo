@@ -11,13 +11,13 @@ public slots:
     // Create a new connection to a database in this thread
     void recordData(const QString &dbname, shared_ptr<InspectData> inspect);
 
-    // Calculate top 10 POI or USER in a time frame
+    // Calculate top 10 POI or USER range in a time frame
     void calculateTop10(pair<int, int> id, bool calculateUser, const QDateTime& startDate, const QDateTime& endDate);
 
     // Calculate total user over time in a GPS bound and time range
     void calculateTotalUserOverTimeSetPoints(const pair<int, int> &latitudeBound, const pair<int, int> &longitudeBound, const pair<QDateTime, QDateTime> &timeRange);
 
-    // Calculate two user/POI data over a specific time range
+    // Calculate two user/POI data range over a specific time range
     void calculateCompareTwo(pair<int, int> id1, pair<int, int> id2, const pair<QDateTime, QDateTime> &timeRange, bool isUser);
 
     // Calculate newton algorithm and return the newton model

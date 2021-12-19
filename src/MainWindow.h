@@ -63,7 +63,9 @@ public:
     MainCalculation *worker;
 
 private:
+    // Main data
     Ui::MainWindow *ui;
+    shared_ptr<Database> db;
 
     // Calculation thread and state
     bool isProcessing = false;
@@ -82,7 +84,6 @@ private:
     // Bound selection
     pair<int, int> latitudeBound{-90, 90};
     pair<int, int> longitudeBound{-180, 180};
-    shared_ptr<Database> db;
 };
 
 

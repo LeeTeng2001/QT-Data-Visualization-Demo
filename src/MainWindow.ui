@@ -65,7 +65,7 @@
           </property>
           <widget class="QWidget" name="tab_3">
            <attribute name="title">
-            <string>Analyze Single ID</string>
+            <string>Analyze Set Of ID</string>
            </attribute>
            <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
@@ -73,7 +73,7 @@
               <item>
                <widget class="QGroupBox" name="groupBoxUser1">
                 <property name="title">
-                 <string>Show User</string>
+                 <string>Show User Range</string>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_3">
                  <item>
@@ -84,7 +84,7 @@
                    <item>
                     <widget class="QLabel" name="label">
                      <property name="text">
-                      <string>User ID</string>
+                      <string>User ID:</string>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignCenter</set>
@@ -112,7 +112,7 @@
               <item>
                <widget class="QGroupBox" name="groupBoxPOI2">
                 <property name="title">
-                 <string>Show POI</string>
+                 <string>Show POI Range</string>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_12">
                  <item>
@@ -123,7 +123,7 @@
                    <item>
                     <widget class="QLabel" name="label_21">
                      <property name="text">
-                      <string>POI ID</string>
+                      <string>POI ID:</string>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignCenter</set>
@@ -266,7 +266,7 @@
           </widget>
           <widget class="QWidget" name="tab_5">
            <attribute name="title">
-            <string>Compare Two ID</string>
+            <string>Compare Two Set of ID</string>
            </attribute>
            <layout class="QHBoxLayout" name="horizontalLayout_12">
             <item>
@@ -397,7 +397,7 @@
         <item>
          <widget class="QTabWidget" name="tabWidget_3">
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab_6">
            <attribute name="title">
@@ -409,7 +409,7 @@
               <item>
                <widget class="QLabel" name="label_11">
                 <property name="text">
-                 <string>User ID Bound 1</string>
+                 <string>User ID: </string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -523,7 +523,7 @@
             <item>
              <widget class="QLabel" name="label_16">
               <property name="text">
-               <string>Predict total user at a predicted datetime, it'll cache the calculation so you don't have to recalculate the algorithm for same ID</string>
+               <string>Predict total user at a predicted datetime, it'll cache the calculation so you don't have to recalculate the algorithm for a set of ID</string>
               </property>
              </widget>
             </item>
@@ -569,7 +569,7 @@
               <item>
                <widget class="QLabel" name="label_17">
                 <property name="text">
-                 <string>Current cache POI ID: </string>
+                 <string>Currently cached POI ID Range: </string>
                 </property>
                </widget>
               </item>
@@ -586,7 +586,7 @@
               <item>
                <widget class="QLabel" name="label_19">
                 <property name="text">
-                 <string>Choose DateTime</string>
+                 <string>Predict DateTime: </string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -624,7 +624,7 @@
               <item>
                <widget class="QLabel" name="label_20">
                 <property name="text">
-                 <string>Result Message: </string>
+                 <string>Result: </string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
