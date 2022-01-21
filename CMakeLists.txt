@@ -14,7 +14,7 @@ find_package(Qt6 COMPONENTS
         Gui
         Widgets
         Charts
-        SQL
+        Sql
         REQUIRED)
 
 include_directories(src)
